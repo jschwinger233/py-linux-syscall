@@ -13,6 +13,7 @@ SFD_CLOEXEC = 0o2000000
 SFD_NONBLOCK = 0o4000
 
 libc.signalfd.argtypes = [ctypes.c_int, ctypes.POINTER(Sigset), ctypes.c_int]
+libc.signalfd.restype = ctypes.c_int
 
 
 def signalfd(fd: int, signos: [int], flags: int) -> int:
@@ -29,7 +30,7 @@ def signalfd(fd: int, signos: [int], flags: int) -> int:
     return res
 
 
-signalfd.syscall_no = 282
+signalfd.no = 282
 
 
 class SignalfdSiginfo(ctypes.Structure):

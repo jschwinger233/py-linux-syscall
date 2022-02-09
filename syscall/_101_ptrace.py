@@ -33,6 +33,7 @@ libc.ptrace.argtypes = [
     ctypes.c_void_p,
     ctypes.c_void_p,
 ]
+libc.ptrace.restype = ctypes.c_long
 
 
 def ptrace(request: int, pid: int, addr: int, data: typing.Any) -> int:
@@ -47,7 +48,7 @@ def ptrace(request: int, pid: int, addr: int, data: typing.Any) -> int:
     return res
 
 
-ptrace.syscall_no = 101
+ptrace.no = 101
 
 
 class UserRegsStruct(ctypes.Structure):

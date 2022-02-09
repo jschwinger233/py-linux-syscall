@@ -7,6 +7,7 @@ from .common import libc
 __all__ = ["read"]
 
 libc.read.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_size_t]
+libc.read.restype = ctypes.c_size_t
 
 
 def read(fd: int, buf: typing.Any, count: int) -> int:
@@ -19,4 +20,4 @@ def read(fd: int, buf: typing.Any, count: int) -> int:
     return res
 
 
-read.syscall_no = 0
+read.no = 0
