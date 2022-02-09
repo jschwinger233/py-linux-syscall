@@ -7,6 +7,8 @@ from ._0_read import read
 from .common import libc
 from .signal_common import Sigset, sigemptyset, sigaddset
 
+__all__ = ["SFD_CLOEXEC", "SFD_NONBLOCK", "signalfd", "SignalfdSiginfo"]
+
 SFD_CLOEXEC = 0o2000000
 SFD_NONBLOCK = 0o4000
 

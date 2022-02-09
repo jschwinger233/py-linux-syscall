@@ -4,6 +4,8 @@ import typing
 
 from .common import libc
 
+__all__ = ["read"]
+
 libc.read.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_size_t]
 
 

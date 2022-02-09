@@ -4,6 +4,19 @@ import typing
 
 from .common import libc
 
+__all__ = [
+    "PTRACE_ATTACH",
+    "PTRACE_DETACH",
+    "PTRACE_GETREGS",
+    "PTRACE_SETREGS",
+    "PTRACE_PEEKDATA",
+    "PTRACE_POKEDATA",
+    "PTRACE_SINGLESTEP",
+    "PTRACE_CONT",
+    "ptrace",
+    "UserRegsStruct",
+]
+
 PTRACE_ATTACH = 16
 PTRACE_DETACH = 17
 PTRACE_GETREGS = 12
@@ -32,6 +45,9 @@ def ptrace(request: int, pid: int, addr: int, data: typing.Any) -> int:
     if res == -1:
         raise OSError(errno.errorcode[ctypes.get_errno()])
     return res
+
+
+ptrace.syscall_no = 101
 
 
 class UserRegsStruct(ctypes.Structure):
@@ -108,5 +124,6 @@ if __name__ == "__main__":
     os.wait()
     regs = UserRegsStruct()
     ptrace(PTRACE_GETREGS, pid, 0, regs)
+    ptrace(PTRACE_SETREGS, pid, 0, regs)
     print(regs.rip)
     ptrace(PTRACE_DETACH, pid, 0, 0)
