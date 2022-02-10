@@ -1,23 +1,19 @@
-import errno
 import ctypes
-import typing
 
-from .common import libc
+from .common import libc, raise_on
 
 __all__ = ["read"]
 
 libc.read.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_size_t]
-libc.read.restype = ctypes.c_size_t
+libc.read.restype = ctypes.c_ssize_t
 
 
-def read(fd: int, buf: typing.Any, count: int) -> int:
+@raise_on(lambda rv: rv < 0)
+def read(fd: int, buf: int, count: int) -> int:
     """
     ssize_t read(int fd, void *buf, size_t count);
     """
-    res = libc.read(fd, ctypes.pointer(buf), count)
-    if res < 0:
-        raise OSError(errno.errorcode[ctypes.get_errno()])
-    return res
+    return libc.read(fd, buf, count)
 
 
 read.no = 0

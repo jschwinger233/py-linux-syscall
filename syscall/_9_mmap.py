@@ -1,7 +1,6 @@
-import errno
 import ctypes
 
-from .common import libc
+from .common import libc, raise_on
 
 __all__ = ["PROT_READ", "PROT_WRITE", "MAP_PRIVATE", "MAP_ANONYMOUS", "mmap"]
 
@@ -21,16 +20,14 @@ libc.mmap.argtypes = [
 libc.mmap.restype = ctypes.c_void_p
 
 
+@raise_on(lambda rv: rv == -1)
 def mmap(
     addr: int, length: int, prot: int, flags: int, fd: int, offset: int
 ) -> int:
     """
     void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset); # noqa
     """
-    res = libc.mmap(addr, length, prot, flags, fd, offset)
-    if res == -1:
-        raise OSError(errno.errorcode[ctypes.get_errno()])
-    return res
+    return libc.mmap(addr, length, prot, flags, fd, offset)
 
 
 mmap.no = 9

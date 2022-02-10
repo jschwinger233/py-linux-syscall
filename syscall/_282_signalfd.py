@@ -1,10 +1,9 @@
-import errno
 import signal
 import ctypes
 
 from ._0_read import read
 
-from .common import libc
+from .common import libc, Structure, raise_on
 from .signal_common import Sigset, sigemptyset, sigaddset
 
 __all__ = ["SFD_CLOEXEC", "SFD_NONBLOCK", "signalfd", "SignalfdSiginfo"]
@@ -12,10 +11,11 @@ __all__ = ["SFD_CLOEXEC", "SFD_NONBLOCK", "signalfd", "SignalfdSiginfo"]
 SFD_CLOEXEC = 0o2000000
 SFD_NONBLOCK = 0o4000
 
-libc.signalfd.argtypes = [ctypes.c_int, ctypes.POINTER(Sigset), ctypes.c_int]
+libc.signalfd.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
 libc.signalfd.restype = ctypes.c_int
 
 
+@raise_on(lambda rv: rv == -1)
 def signalfd(fd: int, signos: [int], flags: int) -> int:
     """
     int signalfd(int fd, const sigset_t *mask, int flags);
@@ -24,16 +24,13 @@ def signalfd(fd: int, signos: [int], flags: int) -> int:
     sigemptyset(sigset)
     for signo in signos:
         sigaddset(sigset, signo)
-    res = libc.signalfd(fd, ctypes.pointer(sigset), flags)
-    if res == -1:
-        raise OSError(errno.errorcode[ctypes.get_errno()])
-    return res
+    return libc.signalfd(fd, sigset.byref(), flags)
 
 
 signalfd.no = 282
 
 
-class SignalfdSiginfo(ctypes.Structure):
+class SignalfdSiginfo(Structure):
     """
     struct signalfd_siginfo {
         uint32_t ssi_signo;    /* Signal number */
@@ -59,6 +56,7 @@ class SignalfdSiginfo(ctypes.Structure):
         uint8_t  pad[X];       /* Pad size to 128 bytes (allow for
                                   additional fields in the future) */
     """
+    PAD_X = 128 - 4*12 - 8*4 - 2
 
     _fields_ = (
         ("ssi_signo", ctypes.c_uint32),
@@ -78,8 +76,11 @@ class SignalfdSiginfo(ctypes.Structure):
         ("ssi_stime", ctypes.c_uint64),
         ("ssi_addr", ctypes.c_uint64),
         ("ssi_addr_lsb", ctypes.c_uint16),
-        ("pad", ctypes.c_uint8 * 46),
+        ("pad", ctypes.c_uint8 * PAD_X),
     )
+
+    def __len__(self):
+        return 128
 
 
 if __name__ == "__main__":
@@ -89,8 +90,8 @@ if __name__ == "__main__":
     fd = signalfd(-1, signos, flags)
     siginfo = SignalfdSiginfo()
     while 1:
-        n = read(fd, siginfo, 128)
-        if n != ctypes.sizeof(siginfo):
+        n = read(fd, siginfo.byref(), siginfo.sizeof())
+        if n != siginfo.sizeof():
             raise RuntimeError("read")
 
         if siginfo.ssi_signo == signal.SIGINT:

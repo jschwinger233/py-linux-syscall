@@ -1,8 +1,6 @@
-import errno
 import ctypes
-import typing
 
-from .common import libc
+from .common import libc, Structure, raise_on
 
 __all__ = [
     "PTRACE_ATTACH",
@@ -36,22 +34,18 @@ libc.ptrace.argtypes = [
 libc.ptrace.restype = ctypes.c_long
 
 
-def ptrace(request: int, pid: int, addr: int, data: typing.Any) -> int:
+@raise_on(lambda rv: rv == -1)
+def ptrace(request: int, pid: int, addr: int, data: int) -> int:
     """
     long ptrace(enum __ptrace_request request, pid_t pid, void *addr, void *data); # noqa
     """
-    if data:
-        data = ctypes.pointer(data)
-    res = libc.ptrace(request, pid, addr, data)
-    if res == -1:
-        raise OSError(errno.errorcode[ctypes.get_errno()])
-    return res
+    return libc.ptrace(request, pid, addr, data)
 
 
 ptrace.no = 101
 
 
-class UserRegsStruct(ctypes.Structure):
+class UserRegsStruct(Structure):
     """
     struct user_regs_struct
     {
@@ -124,7 +118,7 @@ if __name__ == "__main__":
     ptrace(PTRACE_ATTACH, pid, 0, 0)
     os.wait()
     regs = UserRegsStruct()
-    ptrace(PTRACE_GETREGS, pid, 0, regs)
-    ptrace(PTRACE_SETREGS, pid, 0, regs)
+    ptrace(PTRACE_GETREGS, pid, 0, regs.byref())
+    ptrace(PTRACE_SETREGS, pid, 0, regs.byref())
     print(regs.rip)
     ptrace(PTRACE_DETACH, pid, 0, 0)
