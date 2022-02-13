@@ -35,6 +35,7 @@ mmap.no = 9
 if __name__ == "__main__":
     import os
     import sys
+    from ._11_munmap import munmap
 
     filename = sys.argv[1]
     offset = int(sys.argv[2])
@@ -57,3 +58,5 @@ if __name__ == "__main__":
             pa_offset,
         )
         print(ctypes.cast(addr, ctypes.c_char_p).value)
+
+        munmap(addr, length + offset - pa_offset)
