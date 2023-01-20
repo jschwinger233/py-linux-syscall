@@ -3,3 +3,4 @@ from ._9_mmap import *
 from ._11_munmap import *
 from ._101_ptrace import *
 from ._282_signalfd import *
+from ._310_process_vm_readv import *
