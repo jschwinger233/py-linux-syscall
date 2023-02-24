@@ -61,10 +61,11 @@ def process_vm_readv(pid: int, remote_vecs: [(int, int)]) -> [bytes]:
     if rv < sum(iov_len for _, iov_len in remote_vecs):
         s = 0
         for idx, (_, iov_len) in enumerate(remote_vecs):
-            if s == rv:
-                break
             s += iov_len
+            if s >= rv:
+                break
         tails = process_vm_readv(pid, remote_vecs[idx:])
+        del res[idx:]
         res.extend(tails)
     return res
 
